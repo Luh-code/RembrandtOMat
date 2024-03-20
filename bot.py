@@ -23,6 +23,6 @@ async def on_message(message):
     return
 
   if message.content.startswith('$'):
-    evaluate_command(message.content)
+    await evaluate_command(message)
 
 client.run(TOKEN)
