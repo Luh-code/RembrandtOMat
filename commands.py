@@ -1,5 +1,10 @@
 import math
 
+import random
+
+
+import sessions
+
 class Command:
   def __init__(self, message):
     self.message = message
@@ -98,6 +103,7 @@ class Commands:
     count = int(command.parts[2])
     specifier = command.parts[3].lower()
 
+    # Read the count in regard to the given specifier
     if specifier == 'teams':
       team_count = count
     elif specifier == 'ppl':
@@ -106,15 +112,32 @@ class Commands:
       await command.message.channel.send(f'The count specifier has to either be "teams" or "ppl"(people per team) but is "{specifier}"')
       return
     
+    # Get Channel members and their count
     channel_population = channel.members
     channel_population_count = len(channel_population)
 
+    # Create the missing value
     if not team_count:
       team_count = math.ceil(channel_population_count/user_per_team)
     if not user_per_team:
       user_per_team = math.ceil(channel_population_count/team_count)
     
-    await command.message.channel.send(f'Creating {team_count} channels of {user_per_team} people')
+    await command.message.channel.send(f'Creating {team_count} groups of {user_per_team} people each')
+
+    # Create the session
+    session = await sessions.register_session()
+
+    # Create the channels
+    channel_name = channel.name
+    for i in range(team_count):
+      team = await command.message.guild.create_voice_channel(f'{channel_name}-group-{i}')
+      await session.register_team(team)
+      for j in range(user_per_team):
+        if len(channel_population) == 0:
+          break
+        user = random.choice(channel_population)
+        channel_population.remove(user)
+        await user.move_to(team)
 
 
     
